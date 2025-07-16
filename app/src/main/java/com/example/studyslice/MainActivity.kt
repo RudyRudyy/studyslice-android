@@ -6,45 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.studyslice.ui.screens.HomeScreen
-import com.example.studyslice.ui.screens.TimerScreen
-import com.example.studyslice.ui.screens.SettingsScreen
-import com.example.studyslice.ui.theme.StudySliceTheme
+// Remove imports for NavHost, composable, rememberNavController, HomeScreen, TimerScreen, SettingsScreen if they are no longer directly used here.
+// Keep StudySliceTheme if it's not applied within MainApp.kt, but it's good practice to have it in MainApp.kt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            StudySliceTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppNavigation()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AppNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            HomeScreen(navController = navController)
-        }
-        composable("timer") {
-            TimerScreen(navController = navController)
-        }
-        composable("settings") {
-            SettingsScreen(navController = navController)
+            // MainApp will now apply StudySliceTheme
+            MainApp()
         }
     }
 }
