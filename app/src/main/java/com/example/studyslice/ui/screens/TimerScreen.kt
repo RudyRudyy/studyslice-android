@@ -2,21 +2,30 @@ package com.example.studyslice.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.studyslice.ui.components.TimerCircle
-import com.example.studyslice.ui.theme.StudySliceTheme
-
-private var progress by mutableStateOf(0.75f)
-private var isWorkSession by mutableStateOf(true)
+import com.example.studyslice.ui.screens.SessionType // Import your SessionType
+import com.example.studyslice.ui.screens.TimerState // Import your TimerState
+import com.example.studyslice.ui.screens.TimerViewModel // Import your ViewModel
+import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
-fun TimerScreen(navController: NavController) {
+fun TimerScreen(
+    navController: NavController,
+    timerViewModel: TimerViewModel = viewModel() // Obtain ViewModel instance
+) {
+    val currentTimeDisplay by timerViewModel.currentTimeDisplay.collectAsState()
+    val timerState by timerViewModel.timerState.collectAsState()
+    val currentSessionType by timerViewModel.currentSessionType.collectAsState()
+    val progress by timerViewModel.progress.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,67 +33,51 @@ fun TimerScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        TimerCircle(
-            progress = progress,
-            timeText = "25:00",
-            isWorkSession = isWorkSession,
-            modifier = Modifier.padding(16.dp)
+        Text(
+            text = if (currentSessionType == SessionType.WORK) "Work Session" else "Break Time!",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
+
+        // Simple Circular Progress Indicator (can be made more elaborate)
+        Box(contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(
+                progress = progress, // <--- Corrected: Pass the Float value directly
+                modifier = Modifier.size(200.dp),
+                strokeWidth = 8.dp
+            )
+            Text(
+                text = currentTimeDisplay,
+                fontSize = 48.sp,
+                style = MaterialTheme.typography.headlineLarge
+            )
+        }
+
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { /* Start timer */ }) {
-                Text("Start")
+            Button(
+                onClick = { timerViewModel.startPauseTimer() },
+                enabled = timerState != TimerState.FINISHED // Can disable if finished before reset
+            ) {
+                Text(
+                    when (timerState) {
+                        TimerState.RUNNING -> "Pause"
+                        TimerState.PAUSED, TimerState.IDLE, TimerState.FINISHED -> "Start"
+                    }
+                )
             }
 
-            Button(onClick = { /* Pause timer */ }) {
-                Text("Pause")
-            }
-
-            Button(onClick = { /* Reset timer */ }) {
+            Button(
+                onClick = { timerViewModel.resetTimer() },
+                enabled = timerState != TimerState.IDLE || progress < 1.0f
+            ) {
                 Text("Reset")
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(onClick = { navController.navigate("home") }) {
-            Text("Back to Home")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TimerScreenPreview() {
-    StudySliceTheme {
-        val navController = rememberNavController()
-        TimerScreen(navController = navController)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TimerScreenWorkPreview() {
-    StudySliceTheme {
-        val navController = rememberNavController()
-        // This assumes you've updated your TimerScreen to accept isWorkSession parameter
-        // If not, adjust accordingly
-        TimerScreen(navController = navController)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TimerScreenBreakPreview() {
-    StudySliceTheme {
-        val navController = rememberNavController()
-        // This assumes you've updated your TimerScreen to accept isWorkSession parameter
-        // If not, adjust accordingly
-        TimerScreen(navController = navController)
     }
 }
