@@ -1,10 +1,16 @@
 package com.example.studyslice.ui.screens
 
+import android.app.Application
+import androidx.activity.result.launch
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 enum class TimerState {
@@ -19,14 +25,14 @@ enum class SessionType {
     BREAK
 }
 
-class TimerViewModel : ViewModel() {
+class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Configuration ---
-    private var workDurationMillis = 25 * 60 * 1000L // 25 minutes
-    private var breakDurationMillis = 5 * 60 * 1000L   // 5 minutes
+    private var workDurationMillis = 25 * 60 * 1000L
+    private var breakDurationMillis = 5 * 60 * 1000L
 
     // --- StateFlows for UI observation ---
-    private val _currentTimeDisplay = MutableStateFlow("25:00") // Formatted time
+    private val _currentTimeDisplay = MutableStateFlow(formatMillis(workDurationMillis))
     val currentTimeDisplay: StateFlow<String> = _currentTimeDisplay.asStateFlow()
 
     private val _timerState = MutableStateFlow(TimerState.IDLE)
@@ -35,11 +41,18 @@ class TimerViewModel : ViewModel() {
     private val _currentSessionType = MutableStateFlow(SessionType.WORK)
     val currentSessionType: StateFlow<SessionType> = _currentSessionType.asStateFlow()
 
-    private val _progress = MutableStateFlow(1f) // 0.0 to 1.0 for progress indicator
+    private val _progress = MutableStateFlow(1f)
     val progress: StateFlow<Float> = _progress.asStateFlow()
 
+    private val _oneShotEvent = MutableSharedFlow<TimerEvent>()
+    val oneShotEvent: SharedFlow<TimerEvent> = _oneShotEvent.asSharedFlow()
 
-    // Internal Timer Logic
+    sealed class TimerEvent {
+        object PlaySound : TimerEvent()
+        // You can add other events here later, like Vibrate
+    }
+
+    // --- Internal Timer Logic ---
     private var job: Job? = null
     private var remainingTimeMillis = workDurationMillis
 
@@ -68,13 +81,9 @@ class TimerViewModel : ViewModel() {
 
                 if (remainingTimeMillis < 0) remainingTimeMillis = 0
 
-                val totalSeconds = remainingTimeMillis / 1000
-                val minutes = totalSeconds / 60
-                val seconds = totalSeconds % 60
-                _currentTimeDisplay.value = String.format("%02d:%02d", minutes, seconds)
-
+                _currentTimeDisplay.value = formatMillis(remainingTimeMillis)
                 val totalDuration = if (_currentSessionType.value == SessionType.WORK) workDurationMillis else breakDurationMillis
-                _progress.value = remainingTimeMillis.toFloat() / totalDuration.toFloat()
+                _progress.value = if (totalDuration > 0) remainingTimeMillis.toFloat() / totalDuration.toFloat() else 0f
             }
 
             if (remainingTimeMillis <= 0) {
@@ -98,6 +107,10 @@ class TimerViewModel : ViewModel() {
     }
 
     private fun onTimerFinished() {
+        viewModelScope.launch {
+            _oneShotEvent.emit(TimerEvent.PlaySound) // Signal to play sound
+        }
+
         _timerState.value = TimerState.FINISHED
         if (_currentSessionType.value == SessionType.WORK) {
             _currentSessionType.value = SessionType.BREAK
@@ -111,7 +124,6 @@ class TimerViewModel : ViewModel() {
         _timerState.value = TimerState.IDLE
     }
 
-    // format milliseconds to MM:SS
     private fun formatMillis(millis: Long): String {
         val totalSeconds = millis / 1000
         val minutes = totalSeconds / 60
@@ -134,7 +146,6 @@ class TimerViewModel : ViewModel() {
             _progress.value = 1f
         }
     }
-
 
     override fun onCleared() {
         super.onCleared()
