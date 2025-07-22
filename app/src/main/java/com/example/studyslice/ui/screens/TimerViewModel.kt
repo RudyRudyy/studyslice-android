@@ -1,6 +1,7 @@
 package com.example.studyslice.ui.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.activity.result.launch
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -26,6 +27,9 @@ enum class SessionType {
 }
 
 class TimerViewModel(application: Application) : AndroidViewModel(application) {
+    init {
+        Log.d("TimerVM", "INIT: ${this.hashCode()}")
+    }
 
     // --- Configuration ---
     private var workDurationMillis = 25 * 60 * 1000L
@@ -69,6 +73,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun startTimer() {
         job?.cancel()
+        Log.d("TimerVM", "START_TIMER called by ${this.hashCode()}")
         _timerState.value = TimerState.RUNNING
         job = viewModelScope.launch(Dispatchers.Default) {
             val startTime = System.currentTimeMillis()
@@ -149,6 +154,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        Log.d("TimerVM", "ON_CLEARED: ${this.hashCode()}")
         job?.cancel()
     }
 }

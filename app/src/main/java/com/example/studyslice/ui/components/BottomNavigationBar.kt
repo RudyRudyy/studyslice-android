@@ -1,5 +1,6 @@
 package com.example.studyslice.ui.components
 
+import android.util.Log
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,6 +29,8 @@ fun StudySliceBottomNavigationBar(navController: NavController) {
                 label = { Text(screen.label) },
                 selected = currentRoute == screen.route,
                 onClick = {
+                    Log.d("BottomNav", "Attempting to navigate to: ${screen.route}. Current route: ${navController.currentDestination?.route}")
+
                     navController.navigate(screen.route) {
                         navController.graph.startDestinationRoute?.let { route ->
                             popUpTo(route) {
@@ -37,6 +40,7 @@ fun StudySliceBottomNavigationBar(navController: NavController) {
                         launchSingleTop = true
                         restoreState = true
                     }
+                    Log.d("BottomNav", "Navigated. New current route: ${navController.currentDestination?.route}")
                 }
             )
         }

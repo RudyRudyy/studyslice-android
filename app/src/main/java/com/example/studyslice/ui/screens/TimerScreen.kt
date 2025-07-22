@@ -2,6 +2,7 @@ package com.example.studyslice.ui.screens
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ fun TimerScreen(
     navController: NavController,
     timerViewModel: TimerViewModel = viewModel()
 ) {
+    Log.d("TimerScreen", "Composing TimerScreen. VM: ${timerViewModel.hashCode()}")
     val currentTimeDisplay by timerViewModel.currentTimeDisplay.collectAsState()
     val timerState by timerViewModel.timerState.collectAsState()
     val currentSessionType by timerViewModel.currentSessionType.collectAsState()

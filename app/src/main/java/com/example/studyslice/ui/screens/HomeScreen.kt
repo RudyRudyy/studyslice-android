@@ -1,5 +1,6 @@
 package com.example.studyslice.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,7 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.studyslice.ui.theme.StudySliceTheme
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController) { // navController might still be useful for other things, or you could remove it if truly unused
+    Log.d("HomeScreen", "Composing HomeScreen")
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -29,23 +31,14 @@ fun HomeScreen(navController: NavController) {
                 style = MaterialTheme.typography.headlineLarge
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // You can add other content here that makes sense for your HomeScreen
+            // For example, a welcome message, statistics, a quote, etc.
+            Spacer(modifier = Modifier.height(16.dp)) // Optional: if you add more content
+            Text(
+                text = "Welcome! Use the navigation bar below to start a timer or change settings.",
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-            Button(
-                onClick = { navController.navigate("timer") },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Start Studying")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { navController.navigate("settings") },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("Settings")
-            }
         }
     }
 }
