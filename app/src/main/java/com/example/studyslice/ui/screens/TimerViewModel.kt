@@ -53,7 +53,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     sealed class TimerEvent {
         object PlaySound : TimerEvent()
-        // You can add other events here later, like Vibrate
+        object Vibrate : TimerEvent()
     }
 
     // --- Internal Timer Logic ---
@@ -113,7 +113,8 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun onTimerFinished() {
         viewModelScope.launch {
-            _oneShotEvent.emit(TimerEvent.PlaySound) // Signal to play sound
+            _oneShotEvent.emit(TimerEvent.PlaySound)
+            _oneShotEvent.emit(TimerEvent.Vibrate)
         }
 
         _timerState.value = TimerState.FINISHED

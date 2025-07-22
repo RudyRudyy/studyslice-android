@@ -3,6 +3,10 @@ package com.example.studyslice.ui.screens
 import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -41,7 +45,10 @@ fun TimerScreen(
         timerViewModel.oneShotEvent.collectLatest { event ->
             when (event) {
                 is TimerViewModel.TimerEvent.PlaySound -> {
-                    playSound(context, R.raw.alarm_sound) // Replace with your sound file name
+                    playSound(context, R.raw.alarm_sound)
+                }
+                is TimerViewModel.TimerEvent.Vibrate -> {
+                    vibratePhone(context)
                 }
             }
         }
@@ -116,5 +123,25 @@ private fun playSound(context: Context, soundResourceId: Int) {
             mediaPlayer = null // Clear the reference
         }
         start() // Start playback
+    }
+}
+
+private fun vibratePhone(context: Context, durationMillis: Long = 500) { // Default duration 500ms
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // For Android Oreo (API 26) and above, use VibrationEffect
+        // Create a one-shot vibration
+        vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        // For older versions (deprecated)
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(durationMillis)
     }
 }
