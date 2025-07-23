@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.studyslice.ui.theme.PrimaryRed
-import com.example.studyslice.ui.theme.AccentSage
+import com.example.studyslice.ui.theme.PRIMARY_RED
+import com.example.studyslice.ui.theme.ACCENT_GREEN_SAGE
 import com.example.studyslice.ui.theme.StudySliceTheme
 
 @Composable
