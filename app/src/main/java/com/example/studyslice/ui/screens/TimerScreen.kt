@@ -8,6 +8,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,7 +34,6 @@ fun TimerScreen(
     navController: NavController,
     timerViewModel: TimerViewModel = viewModel()
 ) {
-    Log.d("TimerScreen", "Composing TimerScreen. VM: ${timerViewModel.hashCode()}")
     val currentTimeDisplay by timerViewModel.currentTimeDisplay.collectAsState()
     val timerState by timerViewModel.timerState.collectAsState()
     val currentSessionType by timerViewModel.currentSessionType.collectAsState()
@@ -40,8 +41,7 @@ fun TimerScreen(
 
     val context = LocalContext.current
 
-    // Observe one-shot events from ViewModel
-    LaunchedEffect(key1 = timerViewModel) { // Re-launch if ViewModel instance changes
+    LaunchedEffect(key1 = timerViewModel) {
         timerViewModel.oneShotEvent.collectLatest { event ->
             when (event) {
                 is TimerViewModel.TimerEvent.PlaySound -> {
@@ -54,6 +54,7 @@ fun TimerScreen(
         }
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +62,6 @@ fun TimerScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // ... (rest of your TimerScreen UI: Text for session, CircularProgressIndicator, Buttons) ...
         Text(
             text = if (currentSessionType == SessionType.WORK) "Work Session" else "Break Time!",
             fontSize = 24.sp,
@@ -70,7 +70,7 @@ fun TimerScreen(
 
         Box(contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                progress = progress,
+                progress =  progress ,
                 modifier = Modifier.size(200.dp),
                 strokeWidth = 8.dp
             )
@@ -89,22 +89,34 @@ fun TimerScreen(
         ) {
             Button(
                 onClick = { timerViewModel.startPauseTimer() },
-                enabled = timerState != TimerState.FINISHED
             ) {
                 Text(
                     when (timerState) {
                         TimerState.RUNNING -> "Pause"
-                        TimerState.PAUSED, TimerState.IDLE, TimerState.FINISHED -> "Start"
+                        else -> "Start"
                     }
                 )
             }
 
             Button(
                 onClick = { timerViewModel.resetTimer() },
-                enabled = timerState != TimerState.IDLE || progress < 1.0f
             ) {
                 Text("Reset")
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { timerViewModel.switchToNextSessionType() },
+            // Optional: Add some styling or an icon
+            // enabled = timerState != TimerState.RUNNING // You might want to disable this if the timer is running
+        ) {
+            Icon(Icons.Filled.SwapHoriz, contentDescription = "Switch Session")
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(
+                text = if (currentSessionType == SessionType.WORK) "Switch to Break" else "Switch to Work"
+            )
         }
     }
 }

@@ -61,8 +61,9 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     private var remainingTimeMillis = workDurationMillis
 
     init {
-        resetTimer()
+        resetTimerToCurrentSessionType()
     }
+
 
     fun startPauseTimer() {
         when (_timerState.value) {
@@ -105,29 +106,53 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     fun resetTimer() {
         job?.cancel()
         _timerState.value = TimerState.IDLE
-        _currentSessionType.value = SessionType.WORK
-        remainingTimeMillis = workDurationMillis
+        remainingTimeMillis = if (_currentSessionType.value == SessionType.WORK) {
+            workDurationMillis
+        } else {
+            breakDurationMillis
+        }
         _currentTimeDisplay.value = formatMillis(remainingTimeMillis)
         _progress.value = 1f
     }
+
+    private fun resetTimerToCurrentSessionType() {
+        job?.cancel()
+        _timerState.value = TimerState.IDLE
+        remainingTimeMillis = if (_currentSessionType.value == SessionType.WORK) {
+            workDurationMillis
+        } else {
+            breakDurationMillis
+        }
+        _currentTimeDisplay.value = formatMillis(remainingTimeMillis)
+        _progress.value = 1f
+    }
+
 
     private fun onTimerFinished() {
         viewModelScope.launch {
             _oneShotEvent.emit(TimerEvent.PlaySound)
             _oneShotEvent.emit(TimerEvent.Vibrate)
         }
-
         _timerState.value = TimerState.FINISHED
+
+        // Switch session type automatically
         if (_currentSessionType.value == SessionType.WORK) {
             _currentSessionType.value = SessionType.BREAK
-            remainingTimeMillis = breakDurationMillis
         } else {
             _currentSessionType.value = SessionType.WORK
-            remainingTimeMillis = workDurationMillis
         }
-        _currentTimeDisplay.value = formatMillis(remainingTimeMillis)
-        _progress.value = 1f
-        _timerState.value = TimerState.IDLE
+        resetTimerToCurrentSessionType()
+    }
+
+    fun switchToNextSessionType() {
+        job?.cancel()
+
+        _currentSessionType.value = if (_currentSessionType.value == SessionType.WORK) {
+            SessionType.BREAK
+        } else {
+            SessionType.WORK
+        }
+        resetTimerToCurrentSessionType()
     }
 
     private fun formatMillis(millis: Long): String {
@@ -139,17 +164,15 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setWorkDuration(minutes: Int) {
         workDurationMillis = minutes * 60 * 1000L
-        if (_currentSessionType.value == SessionType.WORK && _timerState.value == TimerState.IDLE) {
-            resetTimer()
+        if (_currentSessionType.value == SessionType.WORK && _timerState.value != TimerState.RUNNING) {
+            resetTimerToCurrentSessionType()
         }
     }
 
     fun setBreakDuration(minutes: Int) {
         breakDurationMillis = minutes * 60 * 1000L
-        if (_currentSessionType.value == SessionType.BREAK && _timerState.value == TimerState.IDLE) {
-            remainingTimeMillis = breakDurationMillis
-            _currentTimeDisplay.value = formatMillis(remainingTimeMillis)
-            _progress.value = 1f
+        if (_currentSessionType.value == SessionType.BREAK && _timerState.value != TimerState.RUNNING) {
+            resetTimerToCurrentSessionType()
         }
     }
 
